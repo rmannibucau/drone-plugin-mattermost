@@ -44,7 +44,7 @@ Alternatively you can use the settings section of the plugin to configure matter
 The `settings` can also take a `template` string which is a handlebars template.
 It will have access to the environment variable of the container/step using their name (`DRONE_COMMIT_SHA` for example) with some syntax tolerance on a dotted notation (`drone.commit.sha`).
 
-See link:https://docs.drone.io/pipeline/environment/reference/[^Drone] environment variable reference documentation.
+See link:https://docs.drone.io/pipeline/environment/reference/[Drone^] environment variable reference documentation.
 
 == Build
 
