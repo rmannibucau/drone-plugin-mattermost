@@ -1,0 +1,67 @@
+= Drone Mattermost Plugin
+
+[abstract]
+A quick Java (native) Drone plugin to send a mattermost notification.
+
+== Usage
+
+IMPORTANT: for simplicity this readme uses `latest` tag but always ensure to pin a particular sha (`rmannibucau/drone-plugin-mattermost:latest@sha256:....`).
+
+[source,yaml]
+----
+  - name: notify-mattermost
+    depends_on:
+      - rebuild-cache
+    image: rmannibucau/drone-plugin-mattermost:latest
+    environment:
+      MATTERMOST_CHANNELID: xxxxxx
+      MATTERMOST_BASE: https://xxxx:8065
+      MATTERMOST_TOKEN:
+        from_secret: MATTERMOST_TOKEN
+    when:
+      status: [ success, failure ]
+----
+
+Alternatively you can use the settings section of the plugin to configure mattermost connection:
+
+[source,yaml]
+----
+  - name: notify-mattermost
+    depends_on:
+      - rebuild-cache
+    image: rmannibucau/drone-plugin-mattermost:latest@sha256:4ef77aa84ea4540d212572c34785f5306c54e16fcbb7972c0b785320c32724fd
+    settings:
+      channelId: xxxxxx
+      base: https://xxxx:8065
+      token:
+        from_secret: MATTERMOST_TOKEN
+    when:
+      status: [ success, failure ]
+----
+
+== Advanced
+
+The `settings` can also take a `template` string which is a handlebars template.
+It will have access to the environment variable of the container/step using their name (`DRONE_COMMIT_SHA` for example) with some syntax tolerance on a dotted notation (`drone.commit.sha`).
+
+See link:https://docs.drone.io/pipeline/environment/reference/[^Drone] environment variable reference documentation.
+
+== Build
+
+As of today the build is manual - since I'm not expecting a lot of iterations:
+
+[source,bash]
+----
+# build the binary
+mvn clean install arthur:native-image
+
+# copy needing dependencies from the OS in the docker context
+cp /lib/x86_64-linux-gnu/libc.so.6  target/
+cp /lib64/ld-linux-x86-64.so.2 target/
+
+# build the image
+docker build -t rmannibucau/drone-plugin-mattermost .
+
+# publish the image (assumes login was done)
+docker push rmannibucau/drone-plugin-mattermost
+----

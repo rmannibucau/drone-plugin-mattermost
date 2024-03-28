@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>com.github.rmannibucau.drone</groupId>
+  <artifactId>drone-plugin-mattermost</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+  <name>Drone Mattermost Plugin</name>
+  <description>Simple Drone plugin to send build status notification to mattermost.</description>
+
+  <properties>
+    <maven.compiler.source>17</maven.compiler.source>
+    <maven.compiler.target>17</maven.compiler.target>
+
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+    <fusion.version>1.0.17</fusion.version>
+  </properties>
+
+  <dependencies>
+    <dependency>
+      <groupId>io.yupiik.fusion</groupId>
+      <artifactId>fusion-build-api</artifactId>
+      <version>${fusion.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.yupiik.fusion</groupId>
+      <artifactId>fusion-processor</artifactId>
+      <version>${fusion.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.yupiik.logging</groupId>
+      <artifactId>yupiik-logging-jul</artifactId>
+      <version>1.0.7</version>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.yupiik.fusion</groupId>
+      <artifactId>fusion-httpclient</artifactId>
+      <version>${fusion.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.yupiik.fusion</groupId>
+      <artifactId>fusion-json</artifactId>
+      <version>${fusion.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.yupiik.fusion</groupId>
+      <artifactId>fusion-handlebars</artifactId>
+      <version>${fusion.version}</version>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <!-- mvn clean process-classes arthur:native-image -->
+        <groupId>org.apache.geronimo.arthur</groupId>
+        <artifactId>arthur-maven-plugin</artifactId>
+        <version>1.0.8</version>
+        <configuration>
+          <main>com.github.rmannibucau.drone.DronePlugin</main>
+          <graalVersion>21.0.2-graalce</graalVersion>
+          <output>${project.build.directory}/drone-plugin-mattermost</output>
+          <buildStaticImage>false</buildStaticImage>
+          <customOptions>
+            <customOption>-H:+StaticExecutableWithDynamicLibC</customOption>
+            <customOption>-Djava.util.logging.manager=io.yupiik.logging.jul.YupiikLogManager</customOption>
+          </customOptions>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>com.google.cloud.tools</groupId>
+        <artifactId>jib-maven-plugin</artifactId>
+        <version>3.4.1</version>
+        <!--
+        IMPORTANT: for now we use the Dockerfile until proven needing more automotion
+        mvn package jib:build [-Dimage.registry=...] -> will be pushed
+        mvn package jib:dockerBuild -> local docker image
+        -->
+        <configuration>
+          <containerizingMode>packaged</containerizingMode>
+          <from>
+            <image>${image.base}</image>
+          </from>
+          <to>
+            <image>${image.name}</image>
+          </to>
+          <container>
+            <mainClass>com.github.rmannibucau.drone.DronePlugin</mainClass>
+            <appRoot>${image.workdir}</appRoot>
+            <workingDirectory>${image.workdir}</workingDirectory>
+            <extraClasspath>${image.workdir}/custom/*:${image.workdir}/custom</extraClasspath>
+            <creationTime>USE_CURRENT_TIMESTAMP</creationTime>
+            <jvmFlags>
+              <jvmFlag>-Djava.util.logging.manager=io.yupiik.logging.jul.YupiikLogManager</jvmFlag>
+              <jvmFlag>-Dio.yupiik.logging.jul.handler.StandardHandler.formatter=json</jvmFlag>
+              <jvmFlag>-Djava.security.egd=file:/dev/./urandom</jvmFlag>
+              <jvmFlag>-Djdk.serialFilter=!*</jvmFlag>
+              <jvmFlag>-Djdk.jndi.object.factoriesFilter=!*</jvmFlag>
+              <jvmFlag>-Dcom.sun.jndi.ldap.object.trustSerialData=false</jvmFlag>
+            </jvmFlags>
+            <labels>
+              <org.opencontainers.image.revision>${git.commit.id}</org.opencontainers.image.revision>
+              <org.opencontainers.image.ref.name>${git.branch}</org.opencontainers.image.ref.name>
+              <org.opencontainers.image.source>${git.remote.origin.url}</org.opencontainers.image.source>
+              <org.opencontainers.image.url>${project.scm.url}</org.opencontainers.image.url>
+              <org.opencontainers.image.documentation>${project.url}</org.opencontainers.image.documentation>
+              <org.opencontainers.image.created>${maven.build.timestamp}</org.opencontainers.image.created>
+              <org.opencontainers.image.authors>${project.artifactId}</org.opencontainers.image.authors>
+              <org.opencontainers.image.vendor>${project.artifactId}</org.opencontainers.image.vendor>
+              <org.opencontainers.image.title>${project.artifactId}</org.opencontainers.image.title>
+              <org.opencontainers.image.description>${project.description}</org.opencontainers.image.description>
+              <org.opencontainers.image.version>${project.version}</org.opencontainers.image.version>
+              <com.application.params>_JAVA_OPTIONS=...</com.application.params>
+              <com.application.cmd>docker run ${image.name} &lt;args&gt;</com.application.cmd>
+            </labels>
+          </container>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+</project>
