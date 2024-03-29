@@ -92,7 +92,7 @@ public class MattermostCreatePost implements Runnable {
     private String createDefaultMessage() {
         final var message = new StringBuilder("## ")
                 .append(drone.repo().namespace()).append('/').append(drone.repo().name()).append(' ')
-                .append("success".equals(drone.build().status()) ? ":tada:" : ":x").append('\n');
+                .append(isSuccess() ? ":tada:" : ":x").append('\n');
         message.append("[`")
                 .append(drone.repo().branch()).append(" - ")
                 .append(drone.commit().ref()).append(" - ")
@@ -111,6 +111,17 @@ public class MattermostCreatePost implements Runnable {
                 .filter(Predicate.not(String::isBlank))
                 .ifPresent(msg -> message.append("> ").append(msg.replace("\n", "\n> ")));
         return message.toString();
+    }
+
+    private boolean isSuccess() {
+        return "success".equals(drone.build().status()) &&
+                "success".equals(drone.stage().status()) &&
+                isNullOrEmpty(drone.failed().stages()) &&
+                isNullOrEmpty(drone.failed().steps());
+    }
+
+    private boolean isNullOrEmpty(final String value) {
+        return value == null || value.isBlank();
     }
 
     private record Visited(String prefix) {

@@ -8,8 +8,16 @@ public record DroneConfiguration(
         Build build,
         Repo repo,
         Commit commit,
+        Failed failed,
+        Stage stage,
         @Property(value = "pull_request") PullRequest pullRequest
 ) {
+    public record Stage(String status) {
+    }
+
+    public record Failed(String steps, String stages) {
+    }
+
     public record PullRequest(String title) {
     }
 
