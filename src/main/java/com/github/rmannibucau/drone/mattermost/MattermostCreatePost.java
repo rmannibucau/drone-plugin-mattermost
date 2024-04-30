@@ -13,8 +13,10 @@ import io.yupiik.fusion.json.JsonMapper;
 import java.net.URI;
 import java.net.http.HttpRequest;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Predicate;
 import java.util.logging.Logger;
+import java.util.stream.Stream;
 
 import static java.util.Locale.ROOT;
 import static java.util.Optional.ofNullable;
@@ -92,7 +94,13 @@ public class MattermostCreatePost implements Runnable {
     private String createDefaultMessage() {
         final var message = new StringBuilder("## ")
                 .append(drone.repo().namespace()).append('/').append(drone.repo().name()).append(' ')
-                .append(isSuccess() ? ":tada:" : ":x:").append('\n');
+                .append(isSuccess() ? ":tada:" : (":x: (" + Stream.of(drone.failed().stages(), drone.failed().steps())
+                        .filter(Objects::nonNull)
+                        .filter(Predicate.not(String::isBlank))
+                        .flatMap(it -> Stream.of(it.split(",")))
+                        .map(String::strip)
+                        .distinct()
+                        .toList() + ")")).append('\n');
         message.append("[`")
                 .append(drone.repo().branch()).append(" - ")
                 .append(drone.commit().ref()).append(" - ")
@@ -114,8 +122,8 @@ public class MattermostCreatePost implements Runnable {
     }
 
     private boolean isSuccess() {
-        return "success".equals(drone.build().status()) &&
-                "success".equals(drone.stage().status()) &&
+        return !"failure".equals(drone.build().status()) &&
+                !"failure".equals(drone.stage().status()) &&
                 isNullOrEmpty(drone.failed().stages()) &&
                 isNullOrEmpty(drone.failed().steps());
     }
