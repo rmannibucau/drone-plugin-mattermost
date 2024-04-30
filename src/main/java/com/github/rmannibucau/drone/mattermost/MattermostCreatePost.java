@@ -92,7 +92,7 @@ public class MattermostCreatePost implements Runnable {
     private String createDefaultMessage() {
         final var message = new StringBuilder("## ")
                 .append(drone.repo().namespace()).append('/').append(drone.repo().name()).append(' ')
-                .append(isSuccess() ? ":tada:" : ":x").append('\n');
+                .append(isSuccess() ? ":tada:" : ":x:").append('\n');
         message.append("[`")
                 .append(drone.repo().branch()).append(" - ")
                 .append(drone.commit().ref()).append(" - ")
