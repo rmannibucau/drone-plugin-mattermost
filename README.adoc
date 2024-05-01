@@ -29,7 +29,7 @@ Alternatively you can use the settings section of the plugin to configure matter
   - name: notify-mattermost
     depends_on:
       - rebuild-cache
-    image: rmannibucau/drone-plugin-mattermost:latest@sha256:4ef77aa84ea4540d212572c34785f5306c54e16fcbb7972c0b785320c32724fd
+    image: rmannibucau/drone-plugin-mattermost:latest@sha256:f5b9b15ef724dbf3717ce87d71de19b05f96606d5430e602de0a9de2ae82b15c
     settings:
       channelId: xxxxxx
       base: https://xxxx:8065
