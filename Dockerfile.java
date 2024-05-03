@@ -1,0 +1,4 @@
+FROM ossyupiik/java:17.0.10
+COPY ./target/dependency/ /opt/drone-plugin-mattermost/libs/
+COPY ./target/drone-plugin-mattermost-0.0.1-SNAPSHOT.jar /opt/drone-plugin-mattermost/libs/drone-plugin-mattermost-0.0.1-SNAPSHOT.jar
+ENTRYPOINT ["java", "-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=*:5005", "-Djava.util.logging.manager=io.yupiik.logging.jul.YupiikLogManager", "-cp", "/opt/drone-plugin-mattermost/libs/drone-plugin-mattermost-0.0.1-SNAPSHOT.jar:/opt/drone-plugin-mattermost/libs/yupiik-logging-jul-1.0.7.jar:/opt/drone-plugin-mattermost/libs/fusion-processor-1.0.17.jar:/opt/drone-plugin-mattermost/libs/fusion-json-1.0.17.jar:/opt/drone-plugin-mattermost/libs/fusion-httpclient-1.0.17.jar:/opt/drone-plugin-mattermost/libs/fusion-handlebars-1.0.17.jar:/opt/drone-plugin-mattermost/libs/fusion-build-api-1.0.17.jar:/opt/drone-plugin-mattermost/libs/fusion-api-1.0.17.jar", "com.github.rmannibucau.drone.DronePlugin"]

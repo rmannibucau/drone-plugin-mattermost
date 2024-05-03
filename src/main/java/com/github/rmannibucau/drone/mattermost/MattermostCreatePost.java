@@ -13,16 +13,15 @@ import io.yupiik.fusion.json.JsonMapper;
 import java.net.URI;
 import java.net.http.HttpRequest;
 import java.util.Map;
-import java.util.Objects;
 import java.util.function.Predicate;
 import java.util.logging.Logger;
-import java.util.stream.Stream;
 
 import static java.util.Locale.ROOT;
 import static java.util.Optional.ofNullable;
 
 @DefaultScoped
 public class MattermostCreatePost implements Runnable {
+    private final Logger logger = Logger.getLogger(getClass().getName());
     private final JsonMapper jsonMapper;
     private final MattermostConfiguration env;
     private final ExtendedHttpClient http;
@@ -80,6 +79,11 @@ public class MattermostCreatePost implements Runnable {
                     if (System.getenv().keySet().stream().anyMatch(k -> k.startsWith(prefix))) {
                         return new Visited(prefix);
                     }
+
+                    if ("is_success".equalsIgnoreCase(key)) {
+                        return isSuccess() ? true : null;
+                    }
+
                     return null;
                 })
                 .compile(new HandlebarsCompiler.CompilationContext(
@@ -92,15 +96,11 @@ public class MattermostCreatePost implements Runnable {
     }
 
     private String createDefaultMessage() {
+        final var emoji = isSuccess() ? ":tada:" : ":x:";
         final var message = new StringBuilder("## ")
                 .append(drone.repo().namespace()).append('/').append(drone.repo().name()).append(' ')
-                .append(isSuccess() ? ":tada:" : (":x: (" + Stream.of(drone.failed().stages(), drone.failed().steps())
-                        .filter(Objects::nonNull)
-                        .filter(Predicate.not(String::isBlank))
-                        .flatMap(it -> Stream.of(it.split(",")))
-                        .map(String::strip)
-                        .distinct()
-                        .toList() + ")")).append('\n');
+                .append('#').append(drone.build().number()).append(' ')
+                .append(emoji).append('\n');
         message.append("[`")
                 .append(drone.repo().branch()).append(" - ")
                 .append(drone.commit().ref()).append(" - ")
@@ -122,14 +122,11 @@ public class MattermostCreatePost implements Runnable {
     }
 
     private boolean isSuccess() {
-        return !"failure".equals(drone.build().status()) &&
-                !"failure".equals(drone.stage().status()) &&
-                isNullOrEmpty(drone.failed().stages()) &&
-                isNullOrEmpty(drone.failed().steps());
-    }
-
-    private boolean isNullOrEmpty(final String value) {
-        return value == null || value.isBlank();
+        final var buildStatus = drone.build().status();
+        final var stageStatus = drone.stage().status();
+        final boolean result = "success".equals(buildStatus) && "success".equals(stageStatus);
+        logger.info(() -> "Build status: " + buildStatus + ", stage status: " + stageStatus + "; success=" + result);
+        return result;
     }
 
     private record Visited(String prefix) {

@@ -21,7 +21,7 @@ public record DroneConfiguration(
     public record PullRequest(String title) {
     }
 
-    public record Build(String status) {
+    public record Build(String status, String number) {
     }
 
     public record Repo(String namespace, String name, String branch) {

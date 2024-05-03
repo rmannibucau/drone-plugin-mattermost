@@ -65,3 +65,17 @@ docker build -t rmannibucau/drone-plugin-mattermost .
 # publish the image (assumes login was done)
 docker push rmannibucau/drone-plugin-mattermost
 ----
+
+For debug purposes you can build a java based image with:
+
+[source,bash]
+----
+# build the binary
+mvn clean package dependency:copy-dependencies
+
+# build the image
+docker build -f Dockerfile.java -t rmannibucau/drone-plugin-mattermost .
+
+# publish the image (assumes login was done)
+docker push rmannibucau/drone-plugin-mattermost
+----
